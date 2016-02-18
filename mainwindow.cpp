@@ -6,6 +6,8 @@
 #include <QMessageBox>
 #include <QMenuBar>
 
+#include <QGraphicsView>
+
 #include <fstream>
 #include <sstream>
 
@@ -15,8 +17,11 @@
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
-    this->resize(600, 400);
+    this->resize(800, 400);
     create_menus();
+
+    output_view = new QGraphicsView(this);
+    output_view->setGeometry(530, 50, 200, 200);
 
     solve_button = new QPushButton(this);
     solve_button->setText("Solve");
@@ -33,9 +38,6 @@ MainWindow::MainWindow(QWidget *parent)
     textb_solved->setFontFamily("monospace");
 
     create_input_array();
-
-    //connect(actionOpen, SIGNAL(triggered()), this, SLOT(handleOpen()));
-    //connect(actionClose, SIGNAL(triggered()), this, SLOT(close()));
 }
 
 MainWindow::~MainWindow()
@@ -70,7 +72,6 @@ void MainWindow::handle_solve()
 {
     update_board();
 
-    m_board = Board(grid);
     if (m_board.contradictory()) {
         QMessageBox message_box;
         message_box.setText("Puzzle input is incorrect");
@@ -136,6 +137,7 @@ void MainWindow::update_board()
             grid[row][col] = number_input;
         }
     }
+    m_board = Board(grid);
 }
 
 void MainWindow::create_menus()

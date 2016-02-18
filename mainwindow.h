@@ -10,6 +10,8 @@
 #include <QPushButton>
 #include <QTextBrowser>
 
+#include <QGraphicsView>
+
 #include "sudoku.h"
 
 QT_BEGIN_NAMESPACE
@@ -37,6 +39,8 @@ private:
     void update_board();
     void create_menus();
     void create_input_array();
+
+    QGraphicsView* output_view;
 
     QMenu* file_menu;
     QAction* open_action;

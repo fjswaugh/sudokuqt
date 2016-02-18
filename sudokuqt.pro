@@ -19,6 +19,10 @@ SOURCES += main.cpp\
 HEADERS  += mainwindow.h \
     sudoku.h
 
+DESTDIR=build
+OBJECTS_DIR=build
+MOC_DIR=build
+
 FORMS    +=
 
 CONFIG += c++11

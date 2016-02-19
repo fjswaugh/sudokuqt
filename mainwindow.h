@@ -11,6 +11,7 @@
 #include <QTextBrowser>
 
 #include <QGraphicsView>
+#include <QGraphicsScene>
 
 #include "sudoku.h"
 
@@ -38,19 +39,24 @@ private:
 
     void update_board();
     void create_menus();
+    void print_grid_in_output();
+    void clear_output();
     void create_input_array();
-
-    QGraphicsView* output_view;
+    void create_output_view();
 
     QMenu* file_menu;
     QAction* open_action;
     QAction* close_action;
     QAction* save_action;
 
-    std::array<std::array<QLineEdit*, 9>, 9> input_array;
     QPushButton* solve_button;
     QPushButton* clear_button;
     QTextBrowser* textb_solved;
+
+    QGraphicsView* output_view;
+    QGraphicsScene* output_scene;
+
+    std::array<std::array<QLineEdit*, 9>, 9> input_array;
 };
 
 #endif // MAINWINDOW_H

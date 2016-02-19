@@ -7,6 +7,9 @@
 #include <QMenuBar>
 
 #include <QGraphicsView>
+#include <QGraphicsScene>
+#include <QGraphicsTextItem>
+#include <QPen>
 
 #include <fstream>
 #include <sstream>
@@ -20,8 +23,7 @@ MainWindow::MainWindow(QWidget *parent)
     this->resize(800, 400);
     create_menus();
 
-    output_view = new QGraphicsView(this);
-    output_view->setGeometry(530, 50, 200, 200);
+    create_output_view();
 
     solve_button = new QPushButton(this);
     solve_button->setText("Solve");
@@ -86,22 +88,60 @@ void MainWindow::handle_solve()
 
         textb_solved->setText(old_textb_contents);
         return;
+    } else {
+        print_grid_in_output();
     }
+}
+
+void MainWindow::print_grid_in_output()
+{
+    clear_output();
+
     std::stringstream ss;
     ss << m_board;
     QString board_display = ss.str().c_str();
     textb_solved->setText(board_display);
+
+    constexpr int view_size = 150;
+    for (std::size_t row = 0; row < 9; ++row) {
+        for (std::size_t col = 0; col < 9; ++col) {
+            QString text_str = std::to_string(m_board.grid()[row][col]).c_str();
+            QGraphicsTextItem* text_item = output_scene->addText(text_str);
+            text_item->setPos(view_size*col/9, view_size*row/9);
+        }
+    }
+}
+
+void MainWindow::clear_output()
+{
+    constexpr int view_size = 150;
+    for (std::size_t row = 0; row < 9; ++row) {
+        for (std::size_t col = 0; col < 9; ++col) {
+            QGraphicsItem* text_item = output_scene->itemAt(view_size*col/9, view_size*row/9, QTransform());
+    
+            while (text_item && dynamic_cast<QGraphicsTextItem*>(text_item)) {
+                output_scene->removeItem(text_item);
+                delete text_item;
+                text_item = output_scene->itemAt(view_size*col/9, view_size*row/9, QTransform());
+            }
+
+        }
+    }
+    textb_solved->setText("");
 }
 
 void MainWindow::handle_clear()
 {
     m_board.clear();
+
+    clear_output();
+
+    // Clear input
     for (std::size_t row = 0; row < 9; ++row) {
         for (std::size_t col = 0; col < 9; ++col) {
             input_array[row][col]->setText("");
         }
     }
-    textb_solved->setText("");
 }
 
 void MainWindow::handle_save()
@@ -164,3 +204,27 @@ void MainWindow::create_input_array()
         }
     }
 }
+
+void MainWindow::create_output_view()
+{
+    QPen pen = QPen();
+    pen.setWidth(2);
+
+    output_scene = new QGraphicsScene();
+
+    constexpr int size = 150;
+
+    output_scene->addRect(QRectF(0, 0, size, size), pen);
+    for (int i = 1; i < 9; ++i) {
+        if (i % 3 == 0) pen.setWidth(2);
+        else pen.setWidth(1);
+
+        output_scene->addLine(QLineF(size*i/9, 0, size*i/9, size), pen);
+        output_scene->addLine(QLineF(0, size*i/9, size, size*i/9), pen);
+    }
+
+    output_view = new QGraphicsView(output_scene, this);
+    output_view->setGeometry(530, 50, 200, 200);
+
+}
+

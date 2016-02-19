@@ -61,10 +61,6 @@ void MainWindow::handle_open()
                 input_array[row][col]->setText(text.c_str());
             }
         }
-        std::stringstream ss;
-        ss << m_board;
-        QString board_display = ss.str().c_str();
-        //textBrowser->setText(board_display);
     }
 }
 

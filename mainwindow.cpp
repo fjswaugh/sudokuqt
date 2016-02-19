@@ -137,6 +137,7 @@ void MainWindow::update_board()
             grid[row][col] = number_input;
         }
     }
+
     m_board = Board(grid);
 }
 

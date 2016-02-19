@@ -33,9 +33,6 @@ MainWindow::MainWindow(QWidget *parent)
     textb_solved->setFontFamily("monospace");
 
     create_input_array();
-
-    //connect(actionOpen, SIGNAL(triggered()), this, SLOT(handleOpen()));
-    //connect(actionClose, SIGNAL(triggered()), this, SLOT(close()));
 }
 
 MainWindow::~MainWindow()
@@ -59,10 +56,6 @@ void MainWindow::handle_open()
                 input_array[row][col]->setText(text.c_str());
             }
         }
-        std::stringstream ss;
-        ss << m_board;
-        QString board_display = ss.str().c_str();
-        //textBrowser->setText(board_display);
     }
 }
 

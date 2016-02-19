@@ -70,7 +70,6 @@ void MainWindow::handle_solve()
 {
     update_board();
 
-    m_board = Board(grid);
     if (m_board.contradictory()) {
         QMessageBox message_box;
         message_box.setText("Puzzle input is incorrect");
@@ -136,6 +135,8 @@ void MainWindow::update_board()
             grid[row][col] = number_input;
         }
     }
+
+    m_board = Board(grid);
 }
 
 void MainWindow::create_menus()

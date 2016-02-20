@@ -93,10 +93,13 @@ void MainWindow::print_output()
             QGraphicsTextItem* text_item = output_scene->addText(out_text.c_str());
 
             if (original) {
-                out_text = "<font color=\"red\">" + out_text + "</font>";
+                out_text = "<font color=\"red\"><b>" + out_text + "</b></font>";
                 text_item->setHtml(out_text.c_str());
             }
 
+            QFont font = QFont();
+            font.setPixelSize(view_size*0.7/9);
+            text_item->setFont(font);
             text_item->setPos(view_size*col/9, view_size*0.98*row/9);
         }
     }

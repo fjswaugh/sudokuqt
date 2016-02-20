@@ -200,6 +200,7 @@ void MainWindow::create_input_array()
             int x = 30 + (col * 26) + 5 * (col / 3);
             int y = 50 + (row * 26) + 5 * (row / 3);
             input_array[row][col]->setGeometry(x, y, 24, 24);
+            connect(input_array[row][col], SIGNAL(returnPressed()), this, SLOT(handle_solve()));
         }
     }
 }

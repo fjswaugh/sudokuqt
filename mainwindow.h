@@ -37,12 +37,14 @@ private slots:
 private:
     Board m_board;
 
-    void update_board();
+    bool update_board();
     void create_menus();
     void print_output();
     void clear_output();
     void create_input_array();
     void create_output_view();
+
+    void alert(const std::string& message);
 
     QMenu* file_menu;
     QAction* open_action;
@@ -51,7 +53,6 @@ private:
 
     QPushButton* solve_button;
     QPushButton* clear_button;
-    QTextBrowser* textb_solved;
 
     QGraphicsView* output_view;
     QGraphicsScene* output_scene;

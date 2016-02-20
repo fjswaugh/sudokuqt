@@ -39,7 +39,7 @@ private:
 
     void update_board();
     void create_menus();
-    void print_grid_in_output();
+    void print_output();
     void clear_output();
     void create_input_array();
     void create_output_view();

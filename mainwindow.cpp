@@ -89,11 +89,11 @@ void MainWindow::handle_solve()
         textb_solved->setText(old_textb_contents);
         return;
     } else {
-        print_grid_in_output();
+        print_output();
     }
 }
 
-void MainWindow::print_grid_in_output()
+void MainWindow::print_output()
 {
     clear_output();
 
@@ -102,11 +102,17 @@ void MainWindow::print_grid_in_output()
     QString board_display = ss.str().c_str();
     textb_solved->setText(board_display);
 
-    constexpr int view_size = 150;
+    const int view_size = output_scene->width();
     for (std::size_t row = 0; row < 9; ++row) {
         for (std::size_t col = 0; col < 9; ++col) {
-            QString text_str = std::to_string(m_board.grid()[row][col]).c_str();
-            QGraphicsTextItem* text_item = output_scene->addText(text_str);
+            int out_num = m_board.grid()[row][col];
+            bool original = (m_board.original_grid()[row][col] == out_num);
+            QGraphicsTextItem* text_item = output_scene->addText(std::to_string(out_num).c_str());
+            if (!original) {
+                QFont font = text_item->font();
+                font.setItalic(true);
+                text_item->setFont(font);
+            }
             text_item->setPos(view_size*col/9, view_size*row/9);
         }
     }
@@ -114,7 +120,7 @@ void MainWindow::print_grid_in_output()
 
 void MainWindow::clear_output()
 {
-    constexpr int view_size = 150;
+    const int view_size = output_scene->width();
     for (std::size_t row = 0; row < 9; ++row) {
         for (std::size_t col = 0; col < 9; ++col) {
             QGraphicsItem* text_item = output_scene->itemAt(view_size*col/9, view_size*row/9, QTransform());
@@ -225,6 +231,5 @@ void MainWindow::create_output_view()
 
     output_view = new QGraphicsView(output_scene, this);
     output_view->setGeometry(530, 50, 200, 200);
-
 }
 

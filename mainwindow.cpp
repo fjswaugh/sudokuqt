@@ -210,7 +210,7 @@ void MainWindow::create_output_view()
 
     output_scene = new QGraphicsScene();
 
-    constexpr int size = 250;
+    constexpr int size = 240;
 
     output_scene->addRect(QRectF(0, 0, size, size), pen);
     for (int i = 1; i < 9; ++i) {
@@ -222,6 +222,6 @@ void MainWindow::create_output_view()
     }
 
     output_view = new QGraphicsView(output_scene, this);
-    output_view->setGeometry(530, 50, size+big_width*2, size+big_width*2);
+    output_view->setGeometry(300, 50, size+big_width*2, size+big_width*2);
 }
 

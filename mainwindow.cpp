@@ -20,7 +20,7 @@
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
-    this->resize(800, 400);
+    this->resize(600, 400);
     create_menus();
 
     create_output_view();

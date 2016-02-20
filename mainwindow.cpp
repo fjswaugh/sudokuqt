@@ -6,6 +6,11 @@
 #include <QMessageBox>
 #include <QMenuBar>
 
+#include <QGraphicsView>
+#include <QGraphicsScene>
+#include <QGraphicsTextItem>
+#include <QPen>
+
 #include <fstream>
 #include <sstream>
 
@@ -18,6 +23,8 @@ MainWindow::MainWindow(QWidget *parent)
     this->resize(600, 400);
     create_menus();
 
+    create_output_view();
+
     solve_button = new QPushButton(this);
     solve_button->setText("Solve");
     solve_button->setGeometry(30, 310, 242, 20);
@@ -27,10 +34,6 @@ MainWindow::MainWindow(QWidget *parent)
     clear_button->setText("Clear");
     clear_button->setGeometry(30, 350, 242, 20);
     connect(clear_button, SIGNAL(clicked()), this,  SLOT(handle_clear()));
-
-    textb_solved = new QTextBrowser(this);
-    textb_solved->setGeometry(320, 50, 192, 242);
-    textb_solved->setFontFamily("monospace");
 
     create_input_array();
 }
@@ -45,9 +48,7 @@ void MainWindow::handle_open()
     QString file_name = QFileDialog::getOpenFileName(this, tr("Open sudoku puzzle from file"));
     std::ifstream file(file_name.toStdString());
     if (!(file >> m_board)) {
-        QMessageBox message_box;
-        message_box.setText("Error reading file");
-        message_box.exec();
+        alert("Error reading file");
     } else {
         for (std::size_t row = 0; row < 9; ++row) {
             for (std::size_t col = 0; col < 9; ++col) {
@@ -61,47 +62,92 @@ void MainWindow::handle_open()
 
 void MainWindow::handle_solve()
 {
-    update_board();
+    if (!update_board()) {
+        alert("Bad input");
+        return;
+    }
 
     if (m_board.contradictory()) {
-        QMessageBox message_box;
-        message_box.setText("Puzzle input is incorrect");
-        message_box.exec();
+        alert("Puzzle input is incorrect");
         return;
     }
-
-    QString old_textb_contents = textb_solved->document()->toPlainText();
-    textb_solved->setText("Working...");
-    textb_solved->repaint();
 
     if (!m_board.solve()) {
-        QMessageBox message_box;
-        message_box.setText("Unsolvable puzzle");
-        message_box.exec();
-
-        textb_solved->setText(old_textb_contents);
-        return;
+        alert("Unsolvable puzzle");
+    } else {
+        print_output();
     }
-    std::stringstream ss;
-    ss << m_board;
-    QString board_display = ss.str().c_str();
-    textb_solved->setText(board_display);
+}
+
+void MainWindow::print_output()
+{
+    clear_output();
+
+    const int view_size = output_scene->width();
+    for (std::size_t row = 0; row < 9; ++row) {
+        for (std::size_t col = 0; col < 9; ++col) {
+            int out_num = m_board.grid()[row][col];
+            bool original = (m_board.original_grid()[row][col] == out_num);
+            std::string out_text = std::to_string(out_num);
+
+            QGraphicsTextItem* text_item = output_scene->addText(out_text.c_str());
+
+            if (original) {
+                out_text = "<font color=\"red\"><b>" + out_text + "</b></font>";
+                text_item->setHtml(out_text.c_str());
+            }
+
+            QFont font = QFont();
+            font.setPixelSize(view_size*0.7/9);
+            text_item->setFont(font);
+            text_item->setPos(view_size*col/9, view_size*0.98*row/9);
+        }
+    }
+}
+
+void MainWindow::clear_output()
+{
+    const int view_size = output_scene->width();
+    for (std::size_t row = 0; row < 9; ++row) {
+        for (std::size_t col = 0; col < 9; ++col) {
+            QGraphicsItem* text_item = output_scene->itemAt(view_size*col/9, view_size*row/9, QTransform());
+    
+            while (text_item && dynamic_cast<QGraphicsTextItem*>(text_item)) {
+                output_scene->removeItem(text_item);
+                delete text_item;
+                text_item = output_scene->itemAt(view_size*col/9, view_size*0.98*row/9, QTransform());
+            }
+
+        }
+    }
 }
 
 void MainWindow::handle_clear()
 {
     m_board.clear();
+
+    clear_output();
+
+    // Clear input
     for (std::size_t row = 0; row < 9; ++row) {
         for (std::size_t col = 0; col < 9; ++col) {
             input_array[row][col]->setText("");
         }
     }
-    textb_solved->setText("");
+}
+
+void MainWindow::alert(const std::string& message)
+{
+    QMessageBox message_box;
+    message_box.setText(message.c_str());
+    message_box.exec();
 }
 
 void MainWindow::handle_save()
 {
-    update_board();
+    if (!update_board()) {
+        alert("Bad input");
+    }
 
     QString file = QFileDialog::getSaveFileName(this, tr("Save as..."),
                                                 QString(),
@@ -110,7 +156,7 @@ void MainWindow::handle_save()
     ofs << m_board;
 }
 
-void MainWindow::update_board()
+bool MainWindow::update_board()
 {
     m_board.clear();
     Grid_t grid;
@@ -119,10 +165,7 @@ void MainWindow::update_board()
             std::string input = input_array[row][col]->text().toStdString();
             if (input.empty()) input = "0";
             if (input.length() > 1 || !std::isdigit(input[0])) {
-                QMessageBox message_box;
-                message_box.setText("Bad input");
-                message_box.exec();
-                return;
+                return false;
             }
             int number_input = std::stoi(input);
             grid[row][col] = number_input;
@@ -130,6 +173,7 @@ void MainWindow::update_board()
     }
 
     m_board = Board(grid);
+    return true;
 }
 
 void MainWindow::create_menus()
@@ -159,3 +203,28 @@ void MainWindow::create_input_array()
         }
     }
 }
+
+void MainWindow::create_output_view()
+{
+    constexpr int big_width = 2;
+    constexpr int small_width = 1;
+    QPen pen = QPen();
+    pen.setWidth(big_width);
+
+    output_scene = new QGraphicsScene();
+
+    constexpr int size = 240;
+
+    output_scene->addRect(QRectF(0, 0, size, size), pen);
+    for (int i = 1; i < 9; ++i) {
+        if (i % 3 == 0) pen.setWidth(big_width);
+        else pen.setWidth(small_width);
+
+        output_scene->addLine(QLineF(size*i/9, 0, size*i/9, size), pen);
+        output_scene->addLine(QLineF(0, size*i/9, size, size*i/9), pen);
+    }
+
+    output_view = new QGraphicsView(output_scene, this);
+    output_view->setGeometry(300, 50, size+big_width*2, size+big_width*2);
+}
+

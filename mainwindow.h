@@ -10,6 +10,9 @@
 #include <QPushButton>
 #include <QTextBrowser>
 
+#include <QGraphicsView>
+#include <QGraphicsScene>
+
 #include "sudoku.h"
 
 QT_BEGIN_NAMESPACE
@@ -34,19 +37,27 @@ private slots:
 private:
     Board m_board;
 
-    void update_board();
+    bool update_board();
     void create_menus();
+    void print_output();
+    void clear_output();
     void create_input_array();
+    void create_output_view();
+
+    void alert(const std::string& message);
 
     QMenu* file_menu;
     QAction* open_action;
     QAction* close_action;
     QAction* save_action;
 
-    std::array<std::array<QLineEdit*, 9>, 9> input_array;
     QPushButton* solve_button;
     QPushButton* clear_button;
-    QTextBrowser* textb_solved;
+
+    QGraphicsView* output_view;
+    QGraphicsScene* output_scene;
+
+    std::array<std::array<QLineEdit*, 9>, 9> input_array;
 };
 
 #endif // MAINWINDOW_H

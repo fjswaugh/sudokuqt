@@ -29,35 +29,38 @@ public:
     ~MainWindow();
 
 private slots:
+    // Event handlers
     void handle_open();
     void handle_solve();
     void handle_clear();
     void handle_save();
 
 private:
-    Board m_board;
-
+    // Utility functions
     bool update_board();
-    void create_menus();
     void print_output();
     void clear_output();
-    void create_input_array();
-    void create_output_view();
-
     void alert(const std::string& message);
 
+    // Functions to create elements of UI
+    void create_menus();
+    void create_input_array();
+    void create_output_view();
+    void create_buttons();
+
+    // UI elements
     QMenu* file_menu;
     QAction* open_action;
     QAction* close_action;
     QAction* save_action;
-
     QPushButton* solve_button;
     QPushButton* clear_button;
-
     QGraphicsView* output_view;
     QGraphicsScene* output_scene;
-
     std::array<std::array<QLineEdit*, 9>, 9> input_array;
+
+    // Sudoku board
+    Board m_board;
 };
 
 #endif // MAINWINDOW_H

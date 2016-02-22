@@ -1,2 +1,0 @@
- - Add event handlers to input array to handle arrow keys and enter press.
-

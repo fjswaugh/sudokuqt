@@ -1,4 +1,6 @@
 #include <QFileDialog>
+#include <QEvent>
+#include <QKeyEvent>
 #include <QTextBrowser>
 #include <QFile>
 #include <QString>
@@ -94,6 +96,47 @@ void MainWindow::handle_clear()
             input_array[row][col]->setText("");
         }
     }
+}
+
+// ----------------------------------------------------------------------------
+
+bool MainWindow::eventFilter(QObject* obj, QEvent* event)
+{
+    if (obj->property("input") == true) {
+        std::size_t row = obj->property("row").toInt();
+        std::size_t col = obj->property("col").toInt();
+
+        if (event->type() == QEvent::FocusIn) {
+            input_array[row][col]->selectAll();
+        }
+        if (event->type() == QEvent::KeyPress) {
+            QKeyEvent* key_event = static_cast<QKeyEvent*>(event);
+
+            if (key_event->key() == Qt::Key_Up) {
+                if (row != 0) {
+                    input_array[row-1][col]->setFocus();
+                }
+                return true;
+            } else if (key_event->key() == Qt::Key_Down) {
+                if (row != 8) {
+                    input_array[row+1][col]->setFocus();
+                }
+                return true;
+            } else if (key_event->key() == Qt::Key_Left) {
+                if (col != 0) {
+                    input_array[row][col-1]->setFocus();
+                }
+                return true;
+            } else if (key_event->key() == Qt::Key_Right) {
+                if (col != 8) {
+                    input_array[row][col+1]->setFocus();
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+    return QMainWindow::eventFilter(obj, event);
 }
 
 // ----------------------------------------------------------------------------
@@ -209,10 +252,16 @@ void MainWindow::create_input_array()
             int y = 50 + (row * 26) + 5 * (row / 3);
             input_array[row][col]->setGeometry(x, y, 24, 24);
 
+            input_array[row][col]->setProperty("input", true);
+            input_array[row][col]->setProperty("row", (int)row);
+            input_array[row][col]->setProperty("col", (int)col);
+
             connect(input_array[row][col],
                     SIGNAL(returnPressed()),
                     this,
                     SLOT(handle_solve()));
+
+            input_array[row][col]->installEventFilter(this);
         }
     }
 }

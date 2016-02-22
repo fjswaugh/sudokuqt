@@ -36,6 +36,9 @@ private slots:
     void handle_save();
 
 private:
+    // Event Filter
+    bool eventFilter(QObject* obj, QEvent* event);
+
     // Utility functions
     bool update_board();
     void print_output();

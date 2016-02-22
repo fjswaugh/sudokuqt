@@ -25,6 +25,7 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
     this->resize(580, 380);
+    this->setMinimumSize(580, 380);
 
     create_menus();
     create_output_view();

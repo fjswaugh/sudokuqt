@@ -9,6 +9,7 @@
 #include <QLineEdit>
 #include <QPushButton>
 #include <QTextBrowser>
+#include <QShortcut>
 
 #include <QGraphicsView>
 #include <QGraphicsScene>
@@ -51,6 +52,8 @@ private:
     void create_output_view();
     void create_buttons();
 
+    void create_shortcuts();
+
     // UI elements
     QMenu* file_menu;
     QAction* open_action;
@@ -61,6 +64,10 @@ private:
     QGraphicsView* output_view;
     QGraphicsScene* output_scene;
     std::array<std::array<QLineEdit*, 9>, 9> input_array;
+
+    // Shortcuts
+    QShortcut* open_shortcut;   
+    QShortcut* save_shortcut;
 
     // Sudoku board
     Board m_board;

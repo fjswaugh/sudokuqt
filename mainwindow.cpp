@@ -1,6 +1,8 @@
 #include <QFileDialog>
 #include <QEvent>
 #include <QKeyEvent>
+#include <QShortcut>
+#include <QKeySequence>
 #include <QTextBrowser>
 #include <QFile>
 #include <QString>
@@ -28,6 +30,8 @@ MainWindow::MainWindow(QWidget *parent)
     create_output_view();
     create_buttons();
     create_input_array();
+
+    create_shortcuts();
 }
 
 MainWindow::~MainWindow()
@@ -41,6 +45,8 @@ void MainWindow::handle_open()
 {
     QString file_name = QFileDialog::getOpenFileName(this,
                             tr("Open sudoku puzzle from file"));
+    if (file_name == "") return;
+
     std::ifstream file(file_name.toStdString());
 
     if (!(file >> m_board)) {
@@ -297,5 +303,11 @@ void MainWindow::create_buttons()
     clear_button->setText("Clear");
     clear_button->setGeometry(30, 340, 242, 20);
     connect(clear_button, SIGNAL(clicked()), this,  SLOT(handle_clear()));
+}
+
+void MainWindow::create_shortcuts()
+{
+    open_shortcut = new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_O), this);
+    connect(open_shortcut, SIGNAL(activated()), this, SLOT(handle_open()));
 }
 

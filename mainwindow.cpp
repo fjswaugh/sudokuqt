@@ -113,24 +113,20 @@ bool MainWindow::eventFilter(QObject* obj, QEvent* event)
             QKeyEvent* key_event = static_cast<QKeyEvent*>(event);
 
             if (key_event->key() == Qt::Key_Up) {
-                if (row != 0) {
-                    input_array[row-1][col]->setFocus();
-                }
+                if (row == 0) row = 9;
+                input_array[(row-1)][col]->setFocus();
                 return true;
             } else if (key_event->key() == Qt::Key_Down) {
-                if (row != 8) {
-                    input_array[row+1][col]->setFocus();
-                }
+                if (row == 8) row = -1;
+                input_array[row+1][col]->setFocus();
                 return true;
             } else if (key_event->key() == Qt::Key_Left) {
-                if (col != 0) {
-                    input_array[row][col-1]->setFocus();
-                }
+                if (col == 0) col = 9;
+                input_array[row][col-1]->setFocus();
                 return true;
             } else if (key_event->key() == Qt::Key_Right) {
-                if (col != 8) {
-                    input_array[row][col+1]->setFocus();
-                }
+                if (col == 8) col = -1;
+                input_array[row][col+1]->setFocus();
                 return true;
             }
         }
@@ -229,13 +225,13 @@ void MainWindow::alert(const std::string& message)
 void MainWindow::create_menus()
 {
     open_action = new QAction(tr("&Open a sudoku file"), this);
-    close_action = new QAction(tr("Close"), this);
     save_action = new QAction(tr("&Save this puzzle"), this);
+    close_action = new QAction(tr("&Exit"), this);
 
     file_menu = menuBar()->addMenu(tr("&File"));
     file_menu->addAction(open_action);
-    file_menu->addAction(close_action);
     file_menu->addAction(save_action);
+    file_menu->addAction(close_action);
 
     connect(open_action, SIGNAL(triggered()), this, SLOT(handle_open()));
     connect(close_action, SIGNAL(triggered()), this, SLOT(close()));

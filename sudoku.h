@@ -4,22 +4,19 @@
 #include <array>
 
 /*
- * Represent sudoku grid as N by N array of ints, with 0 representing an
+ * Represent sudoku grid as 9 by 9 array of ints, with 0 representing an
  * unfilled square.
  */
-
-constexpr int N = 9;
-using Grid_t = std::array<std::array<int, N>, N>;
 
 class Board {
 public:
     Board();
-    Board(const Grid_t &grid);
+    Board(const std::array<std::array<int, 9>, 9>& grid);
 
-    std::string str(bool original_grid) const;
+    std::array<int, 9>& operator[](int row);
+    const std::array<int, 9>& operator[](int row) const;
 
-    Grid_t grid() const { return m_grid; }
-    Grid_t original_grid() const { return m_original_grid; }
+    std::string str() const;
 
     // Returns false if grid is unsolvable (doesn't determine if a solution
     // is unique)
@@ -28,21 +25,19 @@ public:
     // Clears class data
     void clear();
 
-    // Checks if the original grid has any immediate contradictions (the same
-    // numbers sharing rows, columns, or squares)
+    // Checks if the grid has any immediate contradictions (the same numbers
+    // sharing rows, columns, or squares)
     bool contradictory();
 private:
     // Checks whether an entry is valid in a given sudoku board
-    bool valid(const Grid_t& grid, int row, int col, int entry);
+    bool valid(const std::array<std::array<int, 9>, 9>& grid,
+               int row, int col, int entry);
 
     // Returns false if a grid is unsolvable
     // Recursive function
-    bool solve(Grid_t grid);
+    bool solve(std::array<std::array<int, 9>, 9> grid);
 
-    // Starting grid
-    Grid_t m_original_grid;
-    // Working/finished grid
-    Grid_t m_grid;
+    std::array<std::array<int, 9>, 9> m_grid;
 };
 
 std::istream& operator>>(std::istream& is, Board& b);

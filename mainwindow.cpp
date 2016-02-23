@@ -52,12 +52,12 @@ void MainWindow::handle_open()
 
     std::ifstream file(file_name.toStdString());
 
-    if (!(file >> m_board)) {
+    if (!(file >> m_in_board)) {
         alert("Error reading file");
     } else {
         for (std::size_t row = 0; row < 9; ++row) {
             for (std::size_t col = 0; col < 9; ++col) {
-                int num = m_board.original_grid()[row][col];
+                int num = m_in_board[row][col];
                 std::string text = std::to_string(num);
                 if (text == "0") text = "";
                 input_array[row][col]->setText(text.c_str());
@@ -70,9 +70,17 @@ void MainWindow::handle_solve()
 {
     if (!update_board()) {
         alert("Bad input");
-    } else if (m_board.contradictory()) {
+        return;
+    }
+    
+    if (m_in_board.contradictory()) {
         alert("Puzzle input is incorrect");
-    } else if (!m_board.solve()) {
+        return;
+    }
+
+    m_out_board = m_in_board;
+    
+    if (!m_out_board.solve()) {
         alert("Unsolvable puzzle");
     } else {
         print_output();
@@ -90,12 +98,13 @@ void MainWindow::handle_save()
                                                 QString(),
                                                 tr("All Files (*)"));
     std::ofstream ofs(file.toStdString().c_str());
-    ofs << m_board.str(true);
+    ofs << m_in_board.str();
 }
 
 void MainWindow::handle_clear()
 {
-    m_board.clear();
+    m_in_board.clear();
+    m_out_board.clear();
 
     clear_output();
 
@@ -107,17 +116,12 @@ void MainWindow::handle_clear()
     }
 }
 
-void MainWindow::handle_clear_output()
-{
-    clear_output();
-}
-
 void MainWindow::handle_copy_input_board()
 {
     copy_board(true);
 }
 
-void MainWindow::handle_copy_solved_board()
+void MainWindow::handle_copy_output_board()
 {
     copy_board(false);
 }
@@ -138,7 +142,7 @@ bool MainWindow::eventFilter(QObject* obj, QEvent* event)
 
             if (key_event->key() == Qt::Key_Up) {
                 if (row == 0) row = 9;
-                input_array[(row-1)][col]->setFocus();
+                input_array[row-1][col]->setFocus();
                 return true;
             } else if (key_event->key() == Qt::Key_Down) {
                 if (row == 8) row = -1;
@@ -163,9 +167,9 @@ bool MainWindow::eventFilter(QObject* obj, QEvent* event)
 
 bool MainWindow::update_board()
 {
-    m_board.clear();
+    m_in_board.clear();
 
-    Grid_t grid;
+    std::array<std::array<int, 9>, 9> grid;
     for (std::size_t row = 0; row < 9; ++row) {
         for (std::size_t col = 0; col < 9; ++col) {
             std::string input = input_array[row][col]->text().toStdString();
@@ -180,7 +184,7 @@ bool MainWindow::update_board()
         }
     }
 
-    m_board = Board(grid);
+    m_in_board = Board(grid);
     return true;
 }
 
@@ -192,8 +196,8 @@ void MainWindow::print_output()
 
     for (std::size_t row = 0; row < 9; ++row) {
         for (std::size_t col = 0; col < 9; ++col) {
-            int out_num = m_board.grid()[row][col];
-            bool original = (m_board.original_grid()[row][col] == out_num);
+            int out_num = m_out_board[row][col];
+            bool original = (m_in_board[row][col] == out_num);
             std::string out_text = std::to_string(out_num);
 
             QGraphicsTextItem* text_item =
@@ -252,7 +256,8 @@ void MainWindow::copy_board(bool input_board)
     }
 
     QClipboard* clipboard = QApplication::clipboard();
-    clipboard->setText(m_board.str(input_board).c_str());
+    Board& b = (input_board ? m_in_board : m_out_board);
+    clipboard->setText(b.str().c_str());
 }
 
 // ----------------------------------------------------------------------------
@@ -274,21 +279,21 @@ void MainWindow::create_menus()
 
     copy_input_board_action = new QAction(tr("&Copy input sudoku board"),
                                           this);
-    copy_solved_board_action = new QAction(tr("Copy &solved sudoku board"),
+    copy_output_board_action = new QAction(tr("Copy &output sudoku board"),
                                            this);
 
     edit_menu = menuBar()->addMenu(tr("&Edit"));
     edit_menu->addAction(copy_input_board_action);
-    edit_menu->addAction(copy_solved_board_action);
+    edit_menu->addAction(copy_output_board_action);
 
     connect(copy_input_board_action,
             SIGNAL(triggered()),
             this,
             SLOT(handle_copy_input_board()));
-    connect(copy_solved_board_action,
+    connect(copy_output_board_action,
             SIGNAL(triggered()),
             this,
-            SLOT(handle_copy_solved_board()));
+            SLOT(handle_copy_output_board()));
 }
 
 void MainWindow::create_input_array()

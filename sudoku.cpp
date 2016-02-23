@@ -6,42 +6,35 @@
 
 Board::Board()
 {
-    for (std::size_t row = 0; row < N; ++row) {
-        for (std::size_t col = 0; col < N; ++col) {
-            m_original_grid[row][col] = 0;
+    for (std::size_t row = 0; row < 9; ++row) {
+        for (std::size_t col = 0; col < 9; ++col) {
             m_grid[row][col] = 0;
         }
     }
 }
 
-Board::Board(const Grid_t& grid)
-    : m_original_grid(grid), m_grid(grid)
+Board::Board(const std::array<std::array<int, 9>, 9>& grid)
+    : m_grid(grid)
 {}
 
-std::string Board::str(bool original_grid) const
+std::string Board::str() const
 {
     std::stringstream ss;
 
-    const Grid_t& grid = (original_grid ? m_original_grid : m_grid);
-
-    for (std::size_t row = 0; row < N; ++row) {
+    for (std::size_t row = 0; row < 9; ++row) {
         if (row == 0) ss << "+-----------------------+\n";
 
-        for (std::size_t col = 0; col < N; ++col) {
+        for (std::size_t col = 0; col < 9; ++col) {
             if (col == 0) ss << "| ";
-            if (grid[row][col] == 0) {
-                ss << grid[row][col] << ' ';
-            } else {
-                ss /*<< "\033[1;31m"*/ << grid[row][col] /*<< "\033[0m "*/ << " ";
-            }
+            ss << m_grid[row][col] << ' ';
             if (col != 0 && (col+1)%3 == 0) ss << "| ";
         }
         ss << '\n';
 
-        if (row != 0 && row != N-1 && (row+1)%3 == 0) {
+        if (row != 0 && row != 9-1 && (row+1)%3 == 0) {
             ss << "|-------+-------+-------|\n";
         }
-        if (row == N-1) ss << "+-----------------------+\n";
+        if (row == 9-1) ss << "+-----------------------+\n";
     }
 
     return ss.str();
@@ -52,16 +45,15 @@ bool Board::solve()
     if (contradictory()) {
         return false;
     }
-    return solve(m_original_grid);
+    return solve(m_grid);
 }
 
 bool Board::contradictory()
 {
     for (std::size_t row = 0; row < 9; ++row) {
         for (std::size_t col = 0; col < 9; ++col) {
-            if (m_original_grid[row][col] != 0 &&
-                    !valid(m_original_grid, row, col,
-                           m_original_grid[row][col])) {
+            if (m_grid[row][col] != 0 &&
+                    !valid(m_grid, row, col, m_grid[row][col])) {
                 return true;
             }
         }
@@ -69,11 +61,12 @@ bool Board::contradictory()
     return false;
 }
 
-bool Board::valid(const Grid_t& grid, int row, int col, int entry)
+bool Board::valid(const std::array<std::array<int, 9>, 9>& grid,
+                  int row, int col, int entry)
 {
     // Test rows and columns
     bool valid = true;
-    for (int i = 0; i < N; ++i) {
+    for (int i = 0; i < 9; ++i) {
         if ((grid[row][i] == entry && i != col) ||
             (grid[i][col] == entry && i != row)) {
             valid = false;
@@ -98,22 +91,31 @@ bool Board::valid(const Grid_t& grid, int row, int col, int entry)
     return valid;
 }
 
+std::array<int, 9>& Board::operator[](int row)
+{
+    return m_grid[row];
+}
+
+const std::array<int, 9>& Board::operator[](int row) const
+{
+    return m_grid[row];
+}
+
 void Board::clear()
 {
     for (std::size_t row = 0; row < 9; ++row) {
         for (std::size_t col = 0; col < 9; ++col) {
-            m_original_grid[row][col] = 0;
             m_grid[row][col] = 0;
         }
     }
 }
 
-bool Board::solve(Grid_t grid)
+bool Board::solve(std::array<std::array<int, 9>, 9> grid)
 {
     int row, col;
     bool found = false;
-    for (row = 0; row < N; ++row) {
-        for (col = 0; col < N; ++col) {
+    for (row = 0; row < 9; ++row) {
+        for (col = 0; col < 9; ++col) {
             if (grid[row][col] == 0) found = true;
             if (found) break;
         }
@@ -135,15 +137,15 @@ bool Board::solve(Grid_t grid)
 
 std::istream& operator>>(std::istream& is, Board& b)
 {
-    Grid_t grid;
+    std::array<std::array<int, 9>, 9> grid;
     std::string line;
     int row = 0;
     while (std::getline(is, line)) {
         // Accept that some lines will be dashes for formatting.
         if (line[1] == '-') continue;
 
-        // Only accept N lines of actual input.
-        if (row > N-1) break;
+        // Only accept 9 lines of actual input.
+        if (row > 9-1) break;
 
         // Otherwise, read in digits (as characters, so that 123 is read as
         // three separate numbers).
@@ -154,9 +156,9 @@ std::istream& operator>>(std::istream& is, Board& b)
             // Ignore whitespace or other formatting.
             if (ch == ' ' || ch == '|') continue;
 
-            // Don't accept more that N columns of actual input, nor anything
+            // Don't accept more that 9 columns of actual input, nor anything
             // that isn't formatting or numbers.
-            if (/*column > N-1 || */!std::isdigit(ch)) {
+            if (/*column > 9-1 || */!std::isdigit(ch)) {
                 is.setstate(std::ios::failbit);
                 return is;
             }
@@ -174,5 +176,6 @@ std::istream& operator>>(std::istream& is, Board& b)
 
 std::ostream& operator<<(std::ostream& os, const Board& b)
 {
-    return os << b.str(false);
+    return os << b.str();
 }
+

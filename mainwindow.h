@@ -36,7 +36,7 @@ private slots:
     void handle_clear();
     void handle_save();
     void handle_copy_input_board();
-    void handle_copy_solved_board();
+    void handle_copy_output_board();
 
 private:
     // Event Filter
@@ -64,7 +64,7 @@ private:
     QAction* save_action;
     QMenu* edit_menu;
     QAction* copy_input_board_action;
-    QAction* copy_solved_board_action;
+    QAction* copy_output_board_action;
 
     QPushButton* solve_button;
     QPushButton* clear_button;
@@ -76,8 +76,10 @@ private:
     QShortcut* open_shortcut;   
     QShortcut* save_shortcut;
 
-    // Sudoku board
-    Board m_board;
+    // Sudoku boards
+    Board m_in_board;
+    Board m_out_board;
 };
 
 #endif // MAINWINDOW_H
+

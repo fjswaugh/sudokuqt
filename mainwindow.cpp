@@ -1,4 +1,6 @@
 #include <QFileDialog>
+#include <QApplication>
+#include <QClipboard>
 #include <QEvent>
 #include <QKeyEvent>
 #include <QShortcut>
@@ -88,7 +90,7 @@ void MainWindow::handle_save()
                                                 QString(),
                                                 tr("All Files (*)"));
     std::ofstream ofs(file.toStdString().c_str());
-    ofs << m_board;
+    ofs << m_board.str(true);
 }
 
 void MainWindow::handle_clear()
@@ -103,6 +105,21 @@ void MainWindow::handle_clear()
             input_array[row][col]->setText("");
         }
     }
+}
+
+void MainWindow::handle_clear_output()
+{
+    clear_output();
+}
+
+void MainWindow::handle_copy_input_board()
+{
+    copy_board(true);
+}
+
+void MainWindow::handle_copy_solved_board()
+{
+    copy_board(false);
 }
 
 // ----------------------------------------------------------------------------
@@ -227,6 +244,17 @@ void MainWindow::alert(const std::string& message)
     message_box.exec();
 }
 
+void MainWindow::copy_board(bool input_board)
+{
+    if (!update_board()) {
+        alert("Bad input");
+        return;
+    }
+
+    QClipboard* clipboard = QApplication::clipboard();
+    clipboard->setText(m_board.str(input_board).c_str());
+}
+
 // ----------------------------------------------------------------------------
 
 void MainWindow::create_menus()
@@ -243,6 +271,24 @@ void MainWindow::create_menus()
     connect(open_action, SIGNAL(triggered()), this, SLOT(handle_open()));
     connect(close_action, SIGNAL(triggered()), this, SLOT(close()));
     connect(save_action, SIGNAL(triggered()), this, SLOT(handle_save()));
+
+    copy_input_board_action = new QAction(tr("&Copy input sudoku board"),
+                                          this);
+    copy_solved_board_action = new QAction(tr("Copy &solved sudoku board"),
+                                           this);
+
+    edit_menu = menuBar()->addMenu(tr("&Edit"));
+    edit_menu->addAction(copy_input_board_action);
+    edit_menu->addAction(copy_solved_board_action);
+
+    connect(copy_input_board_action,
+            SIGNAL(triggered()),
+            this,
+            SLOT(handle_copy_input_board()));
+    connect(copy_solved_board_action,
+            SIGNAL(triggered()),
+            this,
+            SLOT(handle_copy_solved_board()));
 }
 
 void MainWindow::create_input_array()
@@ -310,5 +356,8 @@ void MainWindow::create_shortcuts()
 {
     open_shortcut = new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_O), this);
     connect(open_shortcut, SIGNAL(activated()), this, SLOT(handle_open()));
+
+    save_shortcut = new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_S), this);
+    connect(save_shortcut, SIGNAL(activated()), this, SLOT(handle_save()));
 }
 

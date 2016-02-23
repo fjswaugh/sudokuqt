@@ -18,6 +18,35 @@ Board::Board(const Grid_t& grid)
     : m_original_grid(grid), m_grid(grid)
 {}
 
+std::string Board::str(bool original_grid) const
+{
+    std::stringstream ss;
+
+    const Grid_t& grid = (original_grid ? m_original_grid : m_grid);
+
+    for (std::size_t row = 0; row < N; ++row) {
+        if (row == 0) ss << "+-----------------------+\n";
+
+        for (std::size_t col = 0; col < N; ++col) {
+            if (col == 0) ss << "| ";
+            if (grid[row][col] == 0) {
+                ss << grid[row][col] << ' ';
+            } else {
+                ss /*<< "\033[1;31m"*/ << grid[row][col] /*<< "\033[0m "*/ << " ";
+            }
+            if (col != 0 && (col+1)%3 == 0) ss << "| ";
+        }
+        ss << '\n';
+
+        if (row != 0 && row != N-1 && (row+1)%3 == 0) {
+            ss << "|-------+-------+-------|\n";
+        }
+        if (row == N-1) ss << "+-----------------------+\n";
+    }
+
+    return ss.str();
+}
+
 bool Board::solve()
 {
     if (contradictory()) {
@@ -145,24 +174,5 @@ std::istream& operator>>(std::istream& is, Board& b)
 
 std::ostream& operator<<(std::ostream& os, const Board& b)
 {
-    for (std::size_t row = 0; row < N; ++row) {
-        if (row == 0) os << "+-----------------------+\n";
-
-        for (std::size_t col = 0; col < N; ++col) {
-            if (col == 0) os << "| ";
-            if (b.original_grid()[row][col] == 0) {
-                os << b.grid()[row][col] << ' ';
-            } else {
-                os /*<< "\033[1;31m"*/ << b.grid()[row][col] /*<< "\033[0m "*/ << " ";
-            }
-            if (col != 0 && (col+1)%3 == 0) os << "| ";
-        }
-        os << '\n';
-
-        if (row != 0 && row != N-1 && (row+1)%3 == 0) {
-            os << "|-------+-------+-------|\n";
-        }
-        if (row == N-1) os << "+-----------------------+\n";
-    }
-    return os;
+    return os << b.str(false);
 }

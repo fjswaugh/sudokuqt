@@ -1,0 +1,8 @@
+- Board should not be stored as one object with two grids
+- There should be a grid class, with the mainwindow holding two: one to
+    display as output, and one that is updated as data is inputed.
+- Currently there is an issue with copying as a result of this... Copy input
+    board fetches the input into m_board, however this clears the output grid
+    (it doesn't really make much sense to have one board class where the output
+    grid data doesn't match the input). It doesn't clear the output view
+    though. Hence subsequently copying the output simply copies a blank grid.

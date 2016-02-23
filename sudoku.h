@@ -16,6 +16,8 @@ public:
     Board();
     Board(const Grid_t &grid);
 
+    std::string str(bool original_grid) const;
+
     Grid_t grid() const { return m_grid; }
     Grid_t original_grid() const { return m_original_grid; }
 
@@ -45,8 +47,5 @@ private:
 
 std::istream& operator>>(std::istream& is, Board& b);
 std::ostream& operator<<(std::ostream& os, const Board& b);
-
-Board read_from_file(std::string file_name);
-std::string print(const Board& b);
 
 #endif // SUDOKU_H

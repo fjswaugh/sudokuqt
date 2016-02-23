@@ -35,6 +35,8 @@ private slots:
     void handle_solve();
     void handle_clear();
     void handle_save();
+    void handle_copy_input_board();
+    void handle_copy_solved_board();
 
 private:
     // Event Filter
@@ -45,6 +47,7 @@ private:
     void print_output();
     void clear_output();
     void alert(const std::string& message);
+    void copy_board(bool input_board);
 
     // Functions to create elements of UI
     void create_menus();
@@ -59,6 +62,10 @@ private:
     QAction* open_action;
     QAction* close_action;
     QAction* save_action;
+    QMenu* edit_menu;
+    QAction* copy_input_board_action;
+    QAction* copy_solved_board_action;
+
     QPushButton* solve_button;
     QPushButton* clear_button;
     QGraphicsView* output_view;

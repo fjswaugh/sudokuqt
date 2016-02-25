@@ -114,8 +114,6 @@ void Board::clear()
 
 bool Board::solve(std::array<std::array<int, 9>, 9> grid)
 {
-    m_count++;
-
     int row, col;
     bool found = false;
     for (row = 0; row < 9; ++row) {
@@ -131,6 +129,7 @@ bool Board::solve(std::array<std::array<int, 9>, 9> grid)
     }
 
     for (int entry = 1; entry < 10; ++entry) {
+        m_count++;
         if (valid(grid, row, col, entry)) {
             grid[row][col] = entry;
             if (solve(grid)) return true;

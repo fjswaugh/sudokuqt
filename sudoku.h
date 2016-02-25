@@ -17,6 +17,8 @@ public:
     const std::array<int, 9>& operator[](int row) const;
 
     std::string str() const;
+    // Returns the count of how many numbers were tested overall before
+    // finding the correct number everywhere
     unsigned long int count() const { return m_count; }
 
     // Returns false if grid is unsolvable (doesn't determine if a solution

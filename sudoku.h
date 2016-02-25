@@ -17,6 +17,7 @@ public:
     const std::array<int, 9>& operator[](int row) const;
 
     std::string str() const;
+    unsigned long int count() const { return m_count; }
 
     // Returns false if grid is unsolvable (doesn't determine if a solution
     // is unique)
@@ -38,6 +39,8 @@ private:
     bool solve(std::array<std::array<int, 9>, 9> grid);
 
     std::array<std::array<int, 9>, 9> m_grid;
+
+    unsigned long int m_count;
 };
 
 std::istream& operator>>(std::istream& is, Board& b);

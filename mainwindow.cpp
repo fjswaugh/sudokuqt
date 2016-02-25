@@ -35,13 +35,7 @@ MainWindow::MainWindow(QWidget *parent)
     create_output_view();
     create_buttons();
     create_input_array();
-
-    timer_label = new QLabel(this);
-    timer_label->setText("Time taken: ");
-    const int x_pos = 300;
-    const int y_pos = output_view->geometry().height() + 50 + 15;
-    const int x_size = output_view->geometry().width();
-    timer_label->setGeometry(x_pos, y_pos, x_size, 20);
+    create_labels();
 
     create_shortcuts();
 }
@@ -102,12 +96,7 @@ void MainWindow::handle_solve()
             std::chrono::duration_cast<std::chrono::milliseconds>
             (end_time - begin_time).count();
 
-        std::string text = "Time taken: ";
-        text += std::to_string(milliseconds);
-        text += " ms";
-        timer_label->setText(text.c_str());
-
-        print_output();
+        print_output(milliseconds);
     }
 }
 
@@ -212,9 +201,20 @@ bool MainWindow::update_board()
     return true;
 }
 
-void MainWindow::print_output()
+void MainWindow::print_output(unsigned long int milliseconds)
 {
     clear_output();
+
+    std::string text;
+
+    text = timer_label->property("display_text").toString().toStdString();
+    text += std::to_string(milliseconds);
+    text += " ms";
+    timer_label->setText(text.c_str());
+
+    text = count_label->property("display_text").toString().toStdString();
+    text += std::to_string(m_out_board.count());
+    count_label->setText(text.c_str());
 
     const int view_size = output_scene->width();
 
@@ -245,6 +245,9 @@ void MainWindow::print_output()
 
 void MainWindow::clear_output()
 {
+    timer_label->setText(timer_label->property("display_text").toString());
+    count_label->setText(count_label->property("display_text").toString());
+
     const int view_size = output_scene->width();
     for (std::size_t row = 0; row < 9; ++row) {
         for (std::size_t col = 0; col < 9; ++col) {
@@ -379,6 +382,26 @@ void MainWindow::create_buttons()
     clear_button->setText("Clear");
     clear_button->setGeometry(30, 340, 242, 20);
     connect(clear_button, SIGNAL(clicked()), this,  SLOT(handle_clear()));
+}
+
+void MainWindow::create_labels()
+{
+    timer_label = new QLabel(this);
+    QString display_text = "Time taken: ";
+    timer_label->setProperty("display_text" , display_text);
+    timer_label->setText(display_text);
+
+    const int x_pos = 300;
+    const int y_pos = output_view->geometry().height() + 50 + 15;
+    const int x_size = output_view->geometry().width();
+    timer_label->setGeometry(x_pos, y_pos, x_size, 20);
+
+    count_label = new QLabel(this);
+    display_text = "Number of numbers tried: ";
+    count_label->setProperty("display_text", display_text);
+    count_label->setText(display_text);
+
+    count_label->setGeometry(x_pos, y_pos + 30, x_size, 20);
 }
 
 void MainWindow::create_shortcuts()

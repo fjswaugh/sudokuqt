@@ -45,7 +45,7 @@ private:
 
     // Utility functions
     bool update_board();
-    void print_output();
+    void print_output(unsigned long int milliseconds);
     void clear_output();
     void alert(const std::string& message);
     void copy_board(bool input_board);
@@ -55,6 +55,7 @@ private:
     void create_input_array();
     void create_output_view();
     void create_buttons();
+    void create_labels();
 
     void create_shortcuts();
 
@@ -71,6 +72,7 @@ private:
     QPushButton* clear_button;
     QGraphicsView* output_view;
     QLabel* timer_label;
+    QLabel* count_label;
     QGraphicsScene* output_scene;
     std::array<std::array<QLineEdit*, 9>, 9> input_array;
 

@@ -11,6 +11,7 @@
 #include <QTextStream>
 #include <QMessageBox>
 #include <QMenuBar>
+#include <QLabel>
 
 #include <QGraphicsView>
 #include <QGraphicsScene>
@@ -19,6 +20,7 @@
 
 #include <fstream>
 #include <sstream>
+#include <chrono>
 
 #include "mainwindow.h"
 #include "sudoku.h"
@@ -33,6 +35,13 @@ MainWindow::MainWindow(QWidget *parent)
     create_output_view();
     create_buttons();
     create_input_array();
+
+    timer_label = new QLabel(this);
+    timer_label->setText("Time taken: ");
+    const int x_pos = 300;
+    const int y_pos = output_view->geometry().height() + 50 + 15;
+    const int x_size = output_view->geometry().width();
+    timer_label->setGeometry(x_pos, y_pos, x_size, 20);
 
     create_shortcuts();
 }
@@ -80,9 +89,24 @@ void MainWindow::handle_solve()
 
     m_out_board = m_in_board;
     
+    std::chrono::steady_clock::time_point begin_time =
+        std::chrono::steady_clock::now();
+
     if (!m_out_board.solve()) {
         alert("Unsolvable puzzle");
     } else {
+        std::chrono::steady_clock::time_point end_time =
+            std::chrono::steady_clock::now();
+
+        unsigned long int milliseconds =
+            std::chrono::duration_cast<std::chrono::milliseconds>
+            (end_time - begin_time).count();
+
+        std::string text = "Time taken: ";
+        text += std::to_string(milliseconds);
+        text += " ms";
+        timer_label->setText(text.c_str());
+
         print_output();
     }
 }

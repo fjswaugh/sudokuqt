@@ -10,6 +10,7 @@
 #include <QPushButton>
 #include <QTextBrowser>
 #include <QShortcut>
+#include <QLabel>
 
 #include <QGraphicsView>
 #include <QGraphicsScene>
@@ -69,6 +70,7 @@ private:
     QPushButton* solve_button;
     QPushButton* clear_button;
     QGraphicsView* output_view;
+    QLabel* timer_label;
     QGraphicsScene* output_scene;
     std::array<std::array<QLineEdit*, 9>, 9> input_array;
 

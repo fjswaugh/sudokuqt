@@ -1,4 +1,5 @@
 #include <QFileDialog>
+#include <QThread>
 #include <QApplication>
 #include <QClipboard>
 #include <QEvent>
@@ -21,6 +22,7 @@
 #include <fstream>
 #include <sstream>
 #include <chrono>
+#include <thread>
 
 #include "mainwindow.h"
 #include "sudoku.h"
@@ -83,20 +85,36 @@ void MainWindow::handle_solve()
 
     m_out_board = m_in_board;
     
+    /*
     std::chrono::steady_clock::time_point begin_time =
         std::chrono::steady_clock::now();
+    */
 
-    if (!m_out_board.solve()) {
+    QThread* thread = new QThread(this);
+    Solver* solver = new Solver(&m_out_board);
+    solver->moveToThread(thread);
+    connect(thread, SIGNAL(started()), solver, SLOT(solve()));
+    connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
+    connect(solver, SIGNAL(finished()), thread, SLOT(quit()));
+    connect(solver, SIGNAL(finished()), this, SLOT(handle_print_output()));
+    thread->start();
+
+    // bool result = m_out_board.solve();
+
+    bool result = true;
+    if (!result) {
         alert("Unsolvable puzzle");
     } else {
+        /*
         std::chrono::steady_clock::time_point end_time =
             std::chrono::steady_clock::now();
 
         unsigned long int milliseconds =
             std::chrono::duration_cast<std::chrono::milliseconds>
             (end_time - begin_time).count();
+        */
 
-        print_output(milliseconds);
+        //print_output(0);
     }
 }
 

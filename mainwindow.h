@@ -39,6 +39,10 @@ private slots:
     void handle_copy_input_board();
     void handle_copy_output_board();
 
+    void handle_print_output()
+    {
+        print_output(0);
+    }
 private:
     // Event Filter
     bool eventFilter(QObject* obj, QEvent* event);
@@ -83,6 +87,24 @@ private:
     // Sudoku boards
     Board m_in_board;
     Board m_out_board;
+};
+
+class Solver : public QObject {
+Q_OBJECT
+    public:
+        Solver(Board* board)
+            : m_board(board)
+        {}
+    public slots:
+        void solve()
+        {
+            m_board->solve();
+            emit finished();
+        }
+    signals:
+        void finished();
+    private:
+        Board* m_board;
 };
 
 #endif // MAINWINDOW_H

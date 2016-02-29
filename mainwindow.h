@@ -2,7 +2,9 @@
 #define MAINWINDOW_H
 
 #include <array>
+#include <chrono>
 
+#include <QThread>
 #include <QMainWindow>
 #include <QMenuBar>
 #include <QMenu>
@@ -22,6 +24,67 @@ class QAction;
 class QMenu;
 QT_END_NAMESPACE
 
+class Solver : public QObject {
+Q_OBJECT
+    public:
+        Solver()
+            : m_board(Board()), m_milliseconds(0),
+              m_solvable(true), m_cancelled(false)
+        {}
+
+        Solver(Board board)
+            : m_board(board), m_milliseconds(0),
+              m_solvable(true), m_cancelled(false)
+        {}
+
+        Board board() const { return m_board; }
+
+        unsigned long int milliseconds() const { return m_milliseconds; }
+
+        bool solvable() const { return m_solvable; }
+
+        bool cancelled() const { return m_cancelled; }
+
+        void cancel()
+        {
+            m_cancelled = true;
+            
+            // Cancel the board. This means that any attempt to call
+            // m_board.solve() will simply return without actually solving
+            // anything. Any currently running solve attempt should also exit
+            // immediately.
+            m_board.cancel();
+        }
+    public slots:
+        void solve()
+        {
+            m_solvable = true;
+            m_milliseconds = 0;
+
+            std::chrono::steady_clock::time_point begin_time =
+                std::chrono::steady_clock::now();
+
+            m_solvable = m_board.solve();
+
+            std::chrono::steady_clock::time_point end_time =
+                std::chrono::steady_clock::now();
+
+            m_milliseconds =
+                std::chrono::duration_cast<std::chrono::milliseconds>
+                (end_time - begin_time).count();
+
+            emit finished();
+        }
+    signals:
+        void finished();
+    private:
+        Board m_board;
+        unsigned long int m_milliseconds;
+        bool m_solvable;
+
+        bool m_cancelled;
+};
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -31,7 +94,7 @@ public:
     ~MainWindow();
 
 private slots:
-    // Event handlers
+    // UI handlers
     void handle_open();
     void handle_solve();
     void handle_clear();
@@ -39,17 +102,19 @@ private slots:
     void handle_copy_input_board();
     void handle_copy_output_board();
 
-    void handle_print_output()
-    {
-        print_output(0);
-    }
+    // Handler for when the solving of the puzzle ends (not connected to UI
+    // directly)
+    void handle_finish_solve();
 private:
-    // Event Filter
+    // Custom eventFilter function to add handling for arrow and enter keys in
+    // input fields
     bool eventFilter(QObject* obj, QEvent* event);
 
     // Utility functions
     bool update_board();
     void print_output(unsigned long int milliseconds);
+    void print_waiting();
+    void print_grid();
     void clear_output();
     void alert(const std::string& message);
     void copy_board(bool input_board);
@@ -60,7 +125,6 @@ private:
     void create_output_view();
     void create_buttons();
     void create_labels();
-
     void create_shortcuts();
 
     // UI elements
@@ -87,24 +151,16 @@ private:
     // Sudoku boards
     Board m_in_board;
     Board m_out_board;
-};
 
-class Solver : public QObject {
-Q_OBJECT
-    public:
-        Solver(Board* board)
-            : m_board(board)
-        {}
-    public slots:
-        void solve()
-        {
-            m_board->solve();
-            emit finished();
-        }
-    signals:
-        void finished();
-    private:
-        Board* m_board;
+    // Solving sudokus should be done in another thread to avoid hanging the
+    // ui if the sudoku takes a long time to solve
+    Solver* m_solver;
+    QThread* m_solver_thread;
+
+    // Some constants related to the window
+    static constexpr int m_big_width = 2;
+    static constexpr int m_small_width = 1;
+    static constexpr int m_size = 240;
 };
 
 #endif // MAINWINDOW_H

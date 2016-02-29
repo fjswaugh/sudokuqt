@@ -28,6 +28,10 @@ public:
     // Clears class data
     void clear();
 
+    // Cancel the board. Do not allow it to be solved, and make any currently
+    // running solve loop exit
+    void cancel();
+
     // Checks if the grid has any immediate contradictions (the same numbers
     // sharing rows, columns, or squares)
     bool contradictory();
@@ -43,6 +47,7 @@ private:
     std::array<std::array<int, 9>, 9> m_grid;
 
     unsigned long int m_count;
+    bool m_cancel;
 };
 
 std::istream& operator>>(std::istream& is, Board& b);

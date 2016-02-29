@@ -22,7 +22,6 @@
 #include <fstream>
 #include <sstream>
 #include <chrono>
-#include <thread>
 
 #include "mainwindow.h"
 #include "sudoku.h"
@@ -40,6 +39,9 @@ MainWindow::MainWindow(QWidget *parent)
     create_labels();
 
     create_shortcuts();
+
+    m_solver = nullptr;
+    m_solver_thread = nullptr;
 }
 
 MainWindow::~MainWindow()
@@ -51,6 +53,8 @@ MainWindow::~MainWindow()
 
 void MainWindow::handle_open()
 {
+    handle_clear();
+
     QString file_name = QFileDialog::getOpenFileName(this,
                             tr("Open sudoku puzzle from file"));
     if (file_name == "") return;
@@ -83,39 +87,16 @@ void MainWindow::handle_solve()
         return;
     }
 
-    m_out_board = m_in_board;
-    
-    /*
-    std::chrono::steady_clock::time_point begin_time =
-        std::chrono::steady_clock::now();
-    */
+    m_solver_thread = new QThread(this);
+    m_solver = new Solver(m_in_board);
+    m_solver->moveToThread(m_solver_thread);
 
-    QThread* thread = new QThread(this);
-    Solver* solver = new Solver(&m_out_board);
-    solver->moveToThread(thread);
-    connect(thread, SIGNAL(started()), solver, SLOT(solve()));
-    connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
-    connect(solver, SIGNAL(finished()), thread, SLOT(quit()));
-    connect(solver, SIGNAL(finished()), this, SLOT(handle_print_output()));
-    thread->start();
+    connect(m_solver_thread, SIGNAL(started()), m_solver, SLOT(solve()));
+    connect(m_solver, SIGNAL(finished()), m_solver_thread, SLOT(quit()));
+    connect(m_solver, SIGNAL(finished()), this, SLOT(handle_finish_solve()));
 
-    // bool result = m_out_board.solve();
-
-    bool result = true;
-    if (!result) {
-        alert("Unsolvable puzzle");
-    } else {
-        /*
-        std::chrono::steady_clock::time_point end_time =
-            std::chrono::steady_clock::now();
-
-        unsigned long int milliseconds =
-            std::chrono::duration_cast<std::chrono::milliseconds>
-            (end_time - begin_time).count();
-        */
-
-        //print_output(0);
-    }
+    print_waiting();
+    m_solver_thread->start();
 }
 
 void MainWindow::handle_save()
@@ -134,10 +115,15 @@ void MainWindow::handle_save()
 
 void MainWindow::handle_clear()
 {
+    if (m_solver != nullptr) {
+        m_solver->cancel();
+    }
+
     m_in_board.clear();
     m_out_board.clear();
 
     clear_output();
+    print_grid();
 
     // Clear input
     for (std::size_t row = 0; row < 9; ++row) {
@@ -155,6 +141,27 @@ void MainWindow::handle_copy_input_board()
 void MainWindow::handle_copy_output_board()
 {
     copy_board(false);
+}
+
+void MainWindow::handle_finish_solve()
+{
+    if (m_solver->cancelled()) {
+        return;
+    }
+
+    m_out_board = m_solver->board();
+
+    if (!m_solver->solvable()) {
+        clear_output();
+        alert("Unsolvable");
+    } else {
+        print_output(m_solver->milliseconds());
+    }
+
+    delete m_solver;
+    delete m_solver_thread;
+    m_solver = nullptr;
+    m_solver_thread = nullptr;
 }
 
 // ----------------------------------------------------------------------------
@@ -222,42 +229,58 @@ bool MainWindow::update_board()
 void MainWindow::print_output(unsigned long int milliseconds)
 {
     clear_output();
+    print_grid();
 
-    std::string text;
+    QString timer_text = timer_label->property("display_text").toString() +
+                         QString::number(milliseconds) + " ms";
+    timer_label->setText(timer_text);
 
-    text = timer_label->property("display_text").toString().toStdString();
-    text += std::to_string(milliseconds);
-    text += " ms";
-    timer_label->setText(text.c_str());
+    QString count_text = count_label->property("display_text").toString() +
+                         QString::number(m_out_board.count());
+    count_label->setText(count_text);
 
-    text = count_label->property("display_text").toString().toStdString();
-    text += std::to_string(m_out_board.count());
-    count_label->setText(text.c_str());
-
-    const int view_size = output_scene->width();
-
+    // Print the numbers in the grid
     for (std::size_t row = 0; row < 9; ++row) {
         for (std::size_t col = 0; col < 9; ++col) {
-            int out_num = m_out_board[row][col];
-            bool original = (m_in_board[row][col] == out_num);
-            std::string out_text = std::to_string(out_num);
+            bool original = (m_in_board[row][col] == m_out_board[row][col]);
 
-            QGraphicsTextItem* text_item =
-                output_scene->addText(out_text.c_str());
+            QString output = QString::number(m_out_board[row][col]);
+            QGraphicsTextItem* text_item = output_scene->addText(output);
 
             if (original) {
-                out_text = "<font color=\"red\"><b>" +
-                           out_text +
-                           "</b></font>";
-                text_item->setHtml(out_text.c_str());
+                output = "<font color=\"red\"><b>" + output + "</b></font>";
+                text_item->setHtml(output);
             }
 
-            QFont font = QFont();
-            font.setPixelSize(view_size*0.7/9);
+            QFont font;
+            font.setPixelSize(m_size*0.7/9);
             text_item->setFont(font);
 
-            text_item->setPos(view_size*col/9, view_size*0.98*row/9);
+            text_item->setPos(m_size*col/9, m_size*0.98*row/9);
         }
+    }
+}
+
+void MainWindow::print_waiting()
+{
+    clear_output();
+    QGraphicsTextItem* text_item = output_scene->addText("Waiting...");
+    text_item->setPos(0.8 * m_size / 2, m_size / 2);
+}
+
+void MainWindow::print_grid()
+{
+    QPen pen = QPen();
+    pen.setWidth(m_big_width);
+
+    output_scene->addRect(QRectF(0, 0, m_size, m_size), pen);
+
+    for (int i = 1; i < 9; ++i) {
+        if (i % 3 == 0) pen.setWidth(m_big_width);
+        else pen.setWidth(m_small_width);
+
+        output_scene->addLine(QLineF(m_size*i/9, 0, m_size*i/9, m_size), pen);
+        output_scene->addLine(QLineF(0, m_size*i/9, m_size, m_size*i/9), pen);
     }
 }
 
@@ -266,6 +289,11 @@ void MainWindow::clear_output()
     timer_label->setText(timer_label->property("display_text").toString());
     count_label->setText(count_label->property("display_text").toString());
 
+    for (auto i : output_scene->items()) {
+        output_scene->removeItem(i);
+        delete i;
+    }
+    /*
     const int view_size = output_scene->width();
     for (std::size_t row = 0; row < 9; ++row) {
         for (std::size_t col = 0; col < 9; ++col) {
@@ -284,6 +312,7 @@ void MainWindow::clear_output()
 
         }
     }
+    */
 }
 
 void MainWindow::alert(const std::string& message)
@@ -367,26 +396,12 @@ void MainWindow::create_input_array()
 
 void MainWindow::create_output_view()
 {
-    constexpr int big_width = 2;
-    constexpr int small_width = 1;
-    QPen pen = QPen();
-    pen.setWidth(big_width);
-
     output_scene = new QGraphicsScene();
 
-    constexpr int size = 240;
-    output_scene->addRect(QRectF(0, 0, size, size), pen);
-
-    for (int i = 1; i < 9; ++i) {
-        if (i % 3 == 0) pen.setWidth(big_width);
-        else pen.setWidth(small_width);
-
-        output_scene->addLine(QLineF(size*i/9, 0, size*i/9, size), pen);
-        output_scene->addLine(QLineF(0, size*i/9, size, size*i/9), pen);
-    }
-
     output_view = new QGraphicsView(output_scene, this);
-    output_view->setGeometry(300, 50, size+big_width*2, size+big_width*2);
+    output_view->setGeometry(300, 50, m_size+m_big_width*2, m_size+m_big_width*2);
+
+    print_grid();
 }
 
 void MainWindow::create_buttons()

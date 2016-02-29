@@ -5,7 +5,7 @@
 #include "sudoku.h"
 
 Board::Board()
-    : m_count(0)
+    : m_count(0), m_cancel(false)
 {
     for (std::size_t row = 0; row < 9; ++row) {
         for (std::size_t col = 0; col < 9; ++col) {
@@ -15,7 +15,7 @@ Board::Board()
 }
 
 Board::Board(const std::array<std::array<int, 9>, 9>& grid)
-    : m_grid(grid), m_count(0)
+    : m_grid(grid), m_count(0), m_cancel(false)
 {}
 
 std::string Board::str() const
@@ -43,6 +43,10 @@ std::string Board::str() const
 
 bool Board::solve()
 {
+    if (m_cancel) {
+        return true;
+    }
+
     m_count = 0;
     if (contradictory()) {
         return false;
@@ -112,8 +116,17 @@ void Board::clear()
     }
 }
 
+void Board::cancel()
+{
+    m_cancel = true;
+}
+
 bool Board::solve(std::array<std::array<int, 9>, 9> grid)
 {
+    if (m_cancel) {
+        return true;
+    }
+
     int row, col;
     bool found = false;
     for (row = 0; row < 9; ++row) {

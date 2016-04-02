@@ -60,17 +60,19 @@ MainWindow::~MainWindow()
 
 void MainWindow::handle_open()
 {
-    handle_clear();
-
     QString file_name = QFileDialog::getOpenFileName(this,
                             tr("Open sudoku puzzle from file"));
     if (file_name == "") return;
 
     std::ifstream file(file_name.toStdString());
 
-    if (!(file >> m_in_board)) {
+    Board test_board;
+    if (!(file >> test_board)) {
         alert("Error reading file");
     } else {
+        handle_clear();
+
+        m_in_board = test_board;
         for (std::size_t row = 0; row < 9; ++row) {
             for (std::size_t col = 0; col < 9; ++col) {
                 int num = m_in_board[row][col];

@@ -40,13 +40,20 @@ MainWindow::MainWindow(QWidget *parent)
 
     create_shortcuts();
 
-    m_solver = nullptr;
-    m_solver_thread = nullptr;
+    m_solver_thread = new QThread(this);
+    m_solver = new Solver();
+    m_solver->moveToThread(m_solver_thread);
+
+    connect(this, SIGNAL(solve()), m_solver, SLOT(solve()));
+    connect(m_solver, SIGNAL(finished()), this, SLOT(handle_finish_solve()));
+    m_solver_thread->start();
 }
 
 MainWindow::~MainWindow()
 {
     delete solve_button;
+    // And many other things...
+    // Also please handle thread clean up
 }
 
 // ----------------------------------------------------------------------------
@@ -77,6 +84,11 @@ void MainWindow::handle_open()
 
 void MainWindow::handle_solve()
 {
+    // If the thread is busy, don't do anything for now
+    if (m_solver->solving()) {
+        return;
+    }
+
     if (!update_board()) {
         alert("Bad input");
         return;
@@ -87,16 +99,9 @@ void MainWindow::handle_solve()
         return;
     }
 
-    m_solver_thread = new QThread(this);
-    m_solver = new Solver(m_in_board);
-    m_solver->moveToThread(m_solver_thread);
-
-    connect(m_solver_thread, SIGNAL(started()), m_solver, SLOT(solve()));
-    connect(m_solver, SIGNAL(finished()), m_solver_thread, SLOT(quit()));
-    connect(m_solver, SIGNAL(finished()), this, SLOT(handle_finish_solve()));
-
+    m_solver->set_board(m_in_board);
+    emit solve();
     print_waiting();
-    m_solver_thread->start();
 }
 
 void MainWindow::handle_save()
@@ -115,7 +120,7 @@ void MainWindow::handle_save()
 
 void MainWindow::handle_clear()
 {
-    if (m_solver != nullptr) {
+    if (m_solver->solving()) {
         m_solver->cancel();
     }
 
@@ -145,23 +150,16 @@ void MainWindow::handle_copy_output_board()
 
 void MainWindow::handle_finish_solve()
 {
-    if (m_solver->cancelled()) {
-        return;
+    if (!(m_solver->cancelled())) {
+        m_out_board = m_solver->board();
+
+        if (!m_solver->solvable()) {
+            clear_output();
+            alert("Unsolvable");
+        } else {
+            print_output(m_solver->milliseconds());
+        }
     }
-
-    m_out_board = m_solver->board();
-
-    if (!m_solver->solvable()) {
-        clear_output();
-        alert("Unsolvable");
-    } else {
-        print_output(m_solver->milliseconds());
-    }
-
-    delete m_solver;
-    delete m_solver_thread;
-    m_solver = nullptr;
-    m_solver_thread = nullptr;
 }
 
 // ----------------------------------------------------------------------------
@@ -293,26 +291,6 @@ void MainWindow::clear_output()
         output_scene->removeItem(i);
         delete i;
     }
-    /*
-    const int view_size = output_scene->width();
-    for (std::size_t row = 0; row < 9; ++row) {
-        for (std::size_t col = 0; col < 9; ++col) {
-            QGraphicsItem* text_item = output_scene->itemAt(view_size*col/9,
-                                                            view_size*row/9,
-                                                            QTransform());
-    
-            while (text_item && dynamic_cast<QGraphicsTextItem*>(text_item)) {
-                output_scene->removeItem(text_item);
-                delete text_item;
-
-                text_item = output_scene->itemAt(view_size*col/9,
-                                                 view_size*0.98*row/9,
-                                                 QTransform());
-            }
-
-        }
-    }
-    */
 }
 
 void MainWindow::alert(const std::string& message)

@@ -26,63 +26,66 @@ QT_END_NAMESPACE
 
 class Solver : public QObject {
 Q_OBJECT
-    public:
-        Solver()
-            : m_board(Board()), m_milliseconds(0),
-              m_solvable(true), m_cancelled(false)
-        {}
+public:
+    Solver()
+        : m_board(Board()), m_milliseconds(0),
+          m_solvable(true), m_solving(false), m_cancelled(false)
+    {}
 
-        Solver(Board board)
-            : m_board(board), m_milliseconds(0),
-              m_solvable(true), m_cancelled(false)
-        {}
+    Board board() const { return m_board; }
 
-        Board board() const { return m_board; }
+    unsigned long int milliseconds() const { return m_milliseconds; }
 
-        unsigned long int milliseconds() const { return m_milliseconds; }
+    bool solvable() const { return m_solvable; }
+    bool solving() const { return m_solving; }
+    bool cancelled() const { return m_cancelled; }
 
-        bool solvable() const { return m_solvable; }
+    void cancel()
+    {
+        m_cancelled = true;
+        
+        // Cancel the board. This means that any attempt to call
+        // m_board.solve() will simply return without actually solving
+        // anything. Any currently running solve attempt should also exit
+        // immediately.
+        m_board.cancel();
+    }
 
-        bool cancelled() const { return m_cancelled; }
+    void set_board(Board board)
+    {
+        m_board = board;
+    }
+public slots:
+    void solve()
+    {
+        m_cancelled = false;
+        m_solving = true;
+        m_solvable = true;
+        m_milliseconds = 0;
 
-        void cancel()
-        {
-            m_cancelled = true;
-            
-            // Cancel the board. This means that any attempt to call
-            // m_board.solve() will simply return without actually solving
-            // anything. Any currently running solve attempt should also exit
-            // immediately.
-            m_board.cancel();
-        }
-    public slots:
-        void solve()
-        {
-            m_solvable = true;
-            m_milliseconds = 0;
+        std::chrono::steady_clock::time_point begin_time =
+            std::chrono::steady_clock::now();
 
-            std::chrono::steady_clock::time_point begin_time =
-                std::chrono::steady_clock::now();
+        m_solvable = m_board.solve();
 
-            m_solvable = m_board.solve();
+        std::chrono::steady_clock::time_point end_time =
+            std::chrono::steady_clock::now();
 
-            std::chrono::steady_clock::time_point end_time =
-                std::chrono::steady_clock::now();
+        m_milliseconds =
+            std::chrono::duration_cast<std::chrono::milliseconds>
+            (end_time - begin_time).count();
 
-            m_milliseconds =
-                std::chrono::duration_cast<std::chrono::milliseconds>
-                (end_time - begin_time).count();
-
-            emit finished();
-        }
-    signals:
-        void finished();
-    private:
-        Board m_board;
-        unsigned long int m_milliseconds;
-        bool m_solvable;
-
-        bool m_cancelled;
+        m_solving = false;
+        emit finished();
+    }
+signals:
+    void finished();
+private:
+    Board m_board;
+    unsigned long int m_milliseconds;
+    bool m_solvable;
+    bool m_solving;
+    bool m_cancelled;
 };
 
 class MainWindow : public QMainWindow
@@ -92,6 +95,9 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
+
+signals:
+    void solve();
 
 private slots:
     // UI handlers

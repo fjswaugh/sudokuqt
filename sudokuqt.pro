@@ -13,13 +13,13 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        mainwindow.cpp \
-    sudoku.cpp
+           mainwindow.cpp \
+           sudoku.cpp
 
 HEADERS  += mainwindow.h \
-    sudoku.h
+            sudoku.h
 
-DESTDIR=build
+DESTDIR=.
 OBJECTS_DIR=build
 MOC_DIR=build
 

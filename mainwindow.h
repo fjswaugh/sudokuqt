@@ -97,6 +97,8 @@ public:
     ~MainWindow();
 
 signals:
+    // Signal to send solver object in solving thread to prompt it to solve
+    // current sudoku
     void solve();
 
 private slots:

@@ -51,9 +51,31 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow()
 {
+    /*
+    delete file_menu;
+    delete open_action;
+    delete close_action;
+    delete save_action;
+    delete edit_menu;
+    delete copy_input_board_action;
+    delete copy_output_board_action;
+
     delete solve_button;
-    // And many other things...
- 
+    delete clear_button;
+    delete timer_label;
+    delete count_label;
+    for (std::size_t i = 0; i < 9; ++i) {
+        for (std::size_t j = 0; j < 9; ++j) {
+            delete input_array[i][j];
+        }
+    }
+    delete output_scene;
+    delete output_view;
+
+    delete open_shortcut;
+    delete save_shortcut;
+    */
+
     // Thread clean up
     m_solver_thread->quit();
     m_solver->deleteLater();

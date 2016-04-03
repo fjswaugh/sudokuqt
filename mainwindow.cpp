@@ -53,7 +53,11 @@ MainWindow::~MainWindow()
 {
     delete solve_button;
     // And many other things...
-    // Also please handle thread clean up
+ 
+    // Thread clean up
+    m_solver_thread->quit();
+    m_solver->deleteLater();
+    m_solver_thread->deleteLater();
 }
 
 // ----------------------------------------------------------------------------

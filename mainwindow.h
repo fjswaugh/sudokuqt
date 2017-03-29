@@ -63,13 +63,11 @@ public slots:
         m_solvable = true;
         m_milliseconds = 0;
 
-        std::chrono::steady_clock::time_point begin_time =
-            std::chrono::steady_clock::now();
+        auto begin_time = std::chrono::steady_clock::now();
 
         m_solvable = m_board.solve();
 
-        std::chrono::steady_clock::time_point end_time =
-            std::chrono::steady_clock::now();
+        auto end_time = std::chrono::steady_clock::now();
 
         m_milliseconds =
             std::chrono::duration_cast<std::chrono::milliseconds>

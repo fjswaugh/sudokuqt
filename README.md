@@ -3,6 +3,8 @@ SudokuQt
 
 This is a simple Sudoku solving program with a Qt graphical interface.
 
+![Screenshot](screenshot.png)
+
 Prerequisites
 -------------
 
